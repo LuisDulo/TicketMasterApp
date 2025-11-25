@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "115776817804",
+    "project_id": "ticketmasterapp-ece8c",
+    "storage_bucket": "ticketmasterapp-ece8c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115776817804:android:ea03402148a29e7de7c9a9",
+        "android_client_info": {
+          "package_name": "com.example.ticketmasterapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsQuVQhhqq1ftkPvk4u8PS2JM_K8XGf54"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
