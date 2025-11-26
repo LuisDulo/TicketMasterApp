@@ -1,10 +1,6 @@
 package com.example.ticketmasterapp.ui.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,18 +10,19 @@ import com.example.ticketmasterapp.auth.AuthViewModel
 import com.example.ticketmasterapp.ui.screens.AddEventScreen
 import com.example.ticketmasterapp.ui.screens.EventDetailsScreen
 import com.example.ticketmasterapp.ui.screens.HomeScreen
+import com.example.ticketmasterapp.ui.screens.ProfileScreen   // 👈 NEW
 import com.example.ticketmasterapp.viewmodel.EventViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
+
     // Shared ViewModels
     val eventViewModel: EventViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
 
-    // Track login state
+    // Login state
     var isLoggedIn by remember { mutableStateOf(false) }
 
-    // Decide start destination
     val startDestination = if (isLoggedIn) "home" else "login"
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -50,7 +47,8 @@ fun AppNavHost(navController: NavHostController) {
                 navToAddEvent = { navController.navigate("addEvent") },
                 navToEventDetails = { eventId ->
                     navController.navigate("eventDetails/$eventId")
-                }
+                },
+                navToProfile = { navController.navigate("profile") }   // 👈 PROFILE NAVIGATION
             )
         }
 
@@ -62,12 +60,21 @@ fun AppNavHost(navController: NavHostController) {
             )
         }
 
-        // EVENT DETAILS SCREEN
         composable("eventDetails/{eventId}") { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             EventDetailsScreen(
+                navController = navController,  // 👈 Pass it here
                 eventId = eventId,
                 viewModel = eventViewModel
+            )
+        }
+
+
+        // PROFILE SCREEN (NEW)
+        composable("profile") {
+            ProfileScreen(
+                viewModel = eventViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
     }

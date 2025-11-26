@@ -42,6 +42,11 @@ android {
 }
 
 dependencies {
+    implementation("androidx.compose.material3:material3:1.2.0") // or latest version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+// or latest
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("com.google.zxing:core:3.5.1")
 // Firebase BOM (controls versions automatically)
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("androidx.navigation:navigation-compose:2.8.0")
