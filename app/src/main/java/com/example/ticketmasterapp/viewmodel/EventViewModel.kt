@@ -8,7 +8,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
+import com.example.ticketmasterapp.network.RetrofitClient
+import com.example.ticketmasterapp.network.MpesaConfig
+import com.example.ticketmasterapp.network.MpesaApi
+import com.example.ticketmasterapp.models.StkPushRequest
+import com.example.ticketmasterapp.models.AccessTokenResponse
+import com.example.ticketmasterapp.models.StkPushResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 class EventViewModel : ViewModel() {
 
     private val firestore = FirebaseFirestore.getInstance()
@@ -66,12 +75,67 @@ class EventViewModel : ViewModel() {
     } // 🔥 Initiate M-Pesa Payment (add this function here)
     fun initiateMpesaPayment(
         phone: String,
-        amount: Double,
+        amount: Int,
         eventName: String,
         ticketType: String
     ) {
-        // TODO: Implement your STK Push API call here
-        // For now, just log it
-        println("💰 MPesa payment: Ksh $amount for $ticketType ticket to $phone for event $eventName")
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { // ✅ Run all network calls on IO thread
+
+                try {
+                    // 1️⃣ CREATE AUTH STRING
+                    val keys = "${MpesaConfig.CONSUMER_KEY}:${MpesaConfig.CONSUMER_SECRET}"
+                    val auth = "Basic " + android.util.Base64.encodeToString(
+                        keys.toByteArray(),
+                        android.util.Base64.NO_WRAP
+                    )
+
+                    // 2️⃣ GET TOKEN
+                    val tokenCall = RetrofitClient.instance.getAccessToken(auth)
+                    val tokenResponse = tokenCall.execute()
+                    if (!tokenResponse.isSuccessful) {
+                        println("❌ Token error: ${tokenResponse.message()}")
+                        return@withContext
+                    }
+
+                    val token = tokenResponse.body()?.access_token ?: return@withContext
+
+                    // 3️⃣ CREATE TIMESTAMP & PASSWORD
+                    val timestamp = java.text.SimpleDateFormat("yyyyMMddHHmmss").format(java.util.Date())
+                    val password = android.util.Base64.encodeToString(
+                        "${MpesaConfig.SHORTCODE}${MpesaConfig.PASSKEY}$timestamp".toByteArray(),
+                        android.util.Base64.NO_WRAP
+                    )
+
+                    // 4️⃣ PREPARE STK PUSH REQUEST
+                    val stkRequest = StkPushRequest(
+                        BusinessShortCode = MpesaConfig.SHORTCODE,
+                        Password = password,
+                        Timestamp = timestamp,
+                        Amount = amount,
+                        PartyA = phone,
+                        PartyB = MpesaConfig.SHORTCODE,
+                        PhoneNumber = phone,
+                        CallBackURL = MpesaConfig.CALLBACK_URL,
+                        AccountReference = "$eventName - $ticketType",
+                        TransactionDesc = "Ticket purchase"
+                    )
+
+                    // 5️⃣ SEND STK PUSH
+                    val stkCall = RetrofitClient.instance.stkPush("Bearer $token", stkRequest)
+                    val stkResponse = stkCall.execute()
+
+                    if (stkResponse.isSuccessful) {
+                        println("✅ STK PUSH SENT: ${stkResponse.body()}")
+                    } else {
+                        println("❌ STK PUSH FAILED: ${stkResponse.message()}")
+                    }
+
+                } catch (e: Exception) {
+                    println("❌ M-Pesa STK Push error: ${e.localizedMessage}")
+                }
+            }
+        }
     }
+
 }

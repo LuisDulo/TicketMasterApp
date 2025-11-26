@@ -175,7 +175,7 @@ fun EventDetailsScreen(
 
                             viewModel.initiateMpesaPayment(
                                 phone = phoneNumber,
-                                amount = total,
+                                amount = total.toInt(),
                                 eventName = e.name,
                                 ticketType = selectedTicket
                             )
