@@ -63,5 +63,15 @@ class EventViewModel : ViewModel() {
         } catch (e: Exception) {
             null
         }
+    } // 🔥 Initiate M-Pesa Payment (add this function here)
+    fun initiateMpesaPayment(
+        phone: String,
+        amount: Double,
+        eventName: String,
+        ticketType: String
+    ) {
+        // TODO: Implement your STK Push API call here
+        // For now, just log it
+        println("💰 MPesa payment: Ksh $amount for $ticketType ticket to $phone for event $eventName")
     }
 }
