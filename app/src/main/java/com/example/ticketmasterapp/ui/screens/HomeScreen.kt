@@ -23,6 +23,11 @@ fun HomeScreen(
 ) {
     val events = viewModel.eventList.collectAsState()
 
+    // 🔥 Load events from Firestore when HomeScreen opens
+    LaunchedEffect(Unit) {
+        viewModel.loadEvents()
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = navToAddEvent) {
@@ -31,10 +36,19 @@ fun HomeScreen(
         }
     ) { padding ->
 
-        Column(Modifier.padding(padding).padding(16.dp)) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+        ) {
 
             Text("Browse Events", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(16.dp))
+
+            if (events.value.isEmpty()) {
+                // Show loading state or empty text
+                Text("No events yet. Add one!", style = MaterialTheme.typography.bodyMedium)
+            }
 
             LazyColumn {
                 items(events.value) { event ->
@@ -63,7 +77,7 @@ fun EventCard(event: Event, onClick: () -> Unit) {
             Column(Modifier.padding(8.dp)) {
                 Text(event.name, fontWeight = FontWeight.Bold)
                 Text(event.location)
-                Text("From $${event.regularPrice}")
+                Text("From Ksh ${event.regularPrice}")
             }
         }
     }

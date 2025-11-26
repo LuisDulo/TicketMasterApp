@@ -6,19 +6,20 @@ import kotlinx.coroutines.tasks.await
 
 class EventRepository {
 
-    private val db = FirebaseFirestore.getInstance()
-    private val eventRef = db.collection("events")
+    private val eventsRef = FirebaseFirestore.getInstance().collection("events")
 
-    suspend fun addEvent(event: Event) {
-        val id = eventRef.document().id
-        eventRef.document(id).set(event.copy(id = id)).await()
+    // Save event
+    suspend fun saveEvent(event: Event) {
+        eventsRef.document(event.id).set(event).await()
     }
 
+    // Get all events
     suspend fun getEvents(): List<Event> {
-        return eventRef.get().await().toObjects(Event::class.java)
+        return eventsRef.get().await().toObjects(Event::class.java)
     }
 
-    suspend fun getEventById(id: String): Event? {
-        return eventRef.document(id).get().await().toObject(Event::class.java)
+    // Get one event
+    suspend fun getEvent(eventId: String): Event? {
+        return eventsRef.document(eventId).get().await().toObject(Event::class.java)
     }
 }

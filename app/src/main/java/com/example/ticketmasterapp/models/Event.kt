@@ -12,3 +12,5 @@ data class Event(
     val vvipPrice: Double = 0.0,
     val imageUrl: String = ""
 )
+
+
