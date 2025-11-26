@@ -1,5 +1,9 @@
 package com.example.ticketmasterapp.ui.screens
 
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ticketmasterapp.models.Ticket
@@ -23,6 +28,9 @@ fun ProfileScreen(
     // Collect tickets from StateFlow
     val tickets by viewModel.userTickets.collectAsState(initial = emptyList())
     var loading by remember { mutableStateOf(true) }
+
+    // Currently selected ticket for QR dialog
+    var selectedTicket by remember { mutableStateOf<Ticket?>(null) }
 
     // Start listening for tickets
     LaunchedEffect(Unit) {
@@ -75,31 +83,62 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(tickets) { ticket ->
-                        TicketCard(ticket)
+                        TicketCard(ticket) {
+                            selectedTicket = it
+                        }
                     }
                 }
             }
         }
     }
+
+    // QR Code Dialog
+    if (selectedTicket != null) {
+        AlertDialog(
+            onDismissRequest = { selectedTicket = null },
+            title = { Text("Your Ticket") },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Event: ${selectedTicket!!.eventName}")
+                    Text("Ticket Type: ${selectedTicket!!.ticketType}")
+                    Text("Quantity: ${selectedTicket!!.count}")
+                    Spacer(Modifier.height(16.dp))
+                    // Decode and show QR code
+                    val qrBitmap = Base64.decode(selectedTicket!!.qrBase64, Base64.DEFAULT)
+                        .let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                    qrBitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "QR Code",
+                            modifier = Modifier.size(200.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedTicket = null }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun TicketCard(ticket: Ticket) {
+fun TicketCard(ticket: Ticket, onClick: (Ticket) -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(ticket) },
         elevation = CardDefaults.cardElevation(5.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Event name
             Text(
                 text = ticket.eventName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-
             Spacer(Modifier.height(4.dp))
-
-            // Ticket details
             Text("Ticket Type: ${ticket.ticketType}")
             Text("Quantity: ${ticket.count}")
             Text("Total: Ksh ${ticket.totalPrice}")
